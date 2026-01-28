@@ -83,6 +83,16 @@ function updateActiveNavLink() {
             link.classList.add('active');
         }
     });
+    
+    const dropdownLinks = document.querySelectorAll('.profile-dropdown a:not(#logoutBtn)');
+    dropdownLinks.forEach(link => {
+        link.classList.remove('active');
+        const linkPath = link.getAttribute('href');
+        
+        if (linkPath && currentPath.includes(linkPath)) {
+            link.classList.add('active');
+        }
+    });
 }
 
 function initializeDarkMode() {
