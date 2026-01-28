@@ -1471,6 +1471,16 @@ body {
   color: var(--error-red);
 }
 
+/* Page Titles */
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: center;
+  margin: 2rem 0;
+  font-family: var(--font-heading);
+}
+
 /* ==========================================================================
    Responsive Design
    ========================================================================== */
@@ -2448,4 +2458,330 @@ button:focus,
 
 .link-secondary:hover {
   text-decoration: underline;
+}
+
+/* Empty States */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius);
+  margin: 2rem 0;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.empty-state h3,
+.empty-state h4 {
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.empty-state p {
+  color: var(--text-dark);
+  opacity: 0.8;
+  margin-bottom: 1.5rem;
+}
+
+/* Modal Enhancements */
+.modal.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+}
+
+.modal.show .modal-content {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.warning-text {
+  color: var(--warning-orange);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+/* Button Enhancements */
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  font-family: inherit;
+}
+
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-danger:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+/* Order Items Preview */
+.order-items-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.item-emoji {
+  font-size: 1.25rem;
+}
+
+.item-count {
+  background: var(--primary-blue);
+  color: var(--text-dark);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Order Info Enhancement */
+.order-info {
+  margin: 1rem 0;
+}
+
+.order-info p {
+  margin: 0.25rem 0;
+  color: var(--text-dark);
+  opacity: 0.8;
+}
+
+/* Order Date and Total Styling */
+.order-date,
+.order-total,
+.order-est-delivery {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Toast Enhancements */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--info-blue);
+  color: var(--text-light);
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 20px var(--shadow-medium);
+  z-index: 10000;
+  animation: toastSlideIn 0.3s ease-out;
+  max-width: 350px;
+  word-wrap: break-word;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Settings Page Enhancements */
+.settings-section h3 {
+  color: var(--text-dark);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Danger Zone Enhancements */
+.danger-zone {
+  border: 2px solid var(--error-red);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  background: rgba(244, 67, 54, 0.05);
+  margin-top: 2rem;
+}
+
+.danger-zone-title {
+  color: var(--error-red);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.danger-zone-text {
+  color: var(--text-dark);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+/* Font Size Controls */
+.font-size-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.font-size-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border-light);
+  background: var(--bg-white);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  font-size: 0.875rem;
+}
+
+.font-size-btn:hover,
+.font-size-btn.active {
+  background: var(--primary-blue);
+  border-color: var(--primary-blue);
+}
+
+/* Address Card Enhancements */
+.address-text {
+  color: var(--text-dark);
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.address-phone {
+  color: var(--text-dark);
+  opacity: 0.8;
+  font-size: 0.875rem;
+  margin: 0.25rem 0;
+}
+
+.address-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.address-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.default-badge {
+  background: var(--success-green);
+  color: var(--text-light);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Preferences Section */
+.preferences {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.section-icon {
+  font-size: 1.25rem;
+}
+
+/* Enhanced Form Styling */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border-light);
+  border-radius: var(--border-radius);
+  background: var(--bg-white);
+  color: var(--text-dark);
+  font-family: inherit;
+  transition: all var(--transition-speed) ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(179, 229, 252, 0.3);
+}
+
+/* Button Groups */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .button-group button {
+    width: 100%;
+  }
 }
