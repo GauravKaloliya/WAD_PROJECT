@@ -457,7 +457,7 @@
                         showToast('Address added successfully! ✅', 'success');
                     }
 
-                    const result = updateUserProfile(user.id, { addresses });
+                    const result = updateUserProfile(user.id, { addresses }, { showToast: false });
                     if (result.success) {
                         document.getElementById('addressForm').classList.add('hidden');
                         loadProfile();
@@ -493,7 +493,7 @@
                             isDefault: i === index
                         }));
 
-                        const result = updateUserProfile(user.id, { addresses });
+                        const result = updateUserProfile(user.id, { addresses }, { showToast: false });
                         if (result.success) {
                             showToast('Default address updated! ⭐', 'success');
                             loadProfile();
@@ -513,7 +513,7 @@
                             
                             addresses.splice(index, 1);
 
-                            const result = updateUserProfile(user.id, { addresses });
+                            const result = updateUserProfile(user.id, { addresses }, { showToast: false });
                             if (result.success) {
                                 showToast('Address deleted! 🗑️', 'success');
                                 loadProfile();
@@ -529,7 +529,7 @@
                         marketingEmails: document.getElementById('marketingEmails').checked
                     };
 
-                    const result = updateUserProfile(user.id, { preferences });
+                    const result = updateUserProfile(user.id, { preferences }, { showToast: false });
                     if (result.success) {
                         showToast('Preferences saved! ✅', 'success');
                     }

@@ -8,7 +8,9 @@
 // Constants
 // ==========================================================================
 
-const CART_STORAGE_KEY = 'happyGroceries_cart';
+const CART_STORAGE_KEY = (typeof STORAGE_KEYS !== 'undefined' && STORAGE_KEYS.CART)
+  ? STORAGE_KEYS.CART
+  : 'happyGroceries_cart';
 
 // ==========================================================================
 // Cart Management Functions
@@ -406,7 +408,7 @@ function getProductById(productId) {
  * Update cart counter in navbar
  */
 function updateCartCounter() {
-  const counterElement = document.getElementById('cart-counter');
+  const counterElement = document.getElementById('cartCounter') || document.getElementById('cart-counter');
   const itemCount = getCartItemCount();
   
   if (counterElement) {
@@ -425,10 +427,14 @@ function updateCartCounter() {
 
 function checkCartAccess() {
   if (!isUserLoggedIn()) {
-    showToast('Please login to view your cart!', 'warning');
-    setTimeout(() => {
-      window.location.href = '/pages/login.html';
-    }, 1500);
+    if (typeof redirectToLogin === 'function') {
+      redirectToLogin('Please login to view your cart!');
+    } else {
+      showToast('Please login to view your cart!', 'warning');
+      setTimeout(() => {
+        window.location.href = window.location.pathname.includes('/pages/') ? 'login.html' : 'pages/login.html';
+      }, 900);
+    }
     return false;
   }
   return true;

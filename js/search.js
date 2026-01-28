@@ -52,11 +52,11 @@ const products = [
  * @param {string} query - Search query
  * @returns {Array} - Filtered products
  */
-function searchProducts(query) {
-  if (!query || query.trim() === '') return products;
+function searchProducts(query, productsArray = products) {
+  if (!query || query.trim() === '') return [...productsArray];
   
   const searchTerm = query.toLowerCase().trim();
-  return products.filter(product => 
+  return productsArray.filter(product => 
     product.name.toLowerCase().includes(searchTerm) ||
     product.description.toLowerCase().includes(searchTerm)
   );
@@ -67,9 +67,9 @@ function searchProducts(query) {
  * @param {string} category - Category name
  * @returns {Array} - Filtered products
  */
-function filterByCategory(category) {
-  if (!category || category === 'All') return products;
-  return products.filter(product => product.category === category);
+function filterByCategory(category, productsArray = products) {
+  if (!category || category === 'All') return [...productsArray];
+  return productsArray.filter(product => product.category === category);
 }
 
 /**
@@ -78,8 +78,8 @@ function filterByCategory(category) {
  * @param {number} maxPrice - Maximum price
  * @returns {Array} - Filtered products
  */
-function filterByPrice(minPrice, maxPrice) {
-  return products.filter(product => 
+function filterByPrice(minPrice, maxPrice, productsArray = products) {
+  return productsArray.filter(product => 
     product.price >= minPrice && product.price <= maxPrice
   );
 }
@@ -120,23 +120,24 @@ function sortProducts(productsArray, sortBy) {
  * @returns {Array} - Filtered and sorted products
  */
 function getFilteredProducts(options = {}) {
-  let filteredProducts = products;
+  let filteredProducts = [...products];
   
   // Apply search
   if (options.search) {
-    filteredProducts = searchProducts(options.search);
+    filteredProducts = searchProducts(options.search, filteredProducts);
   }
   
   // Apply category filter
   if (options.category) {
-    filteredProducts = filterByCategory(options.category);
+    filteredProducts = filterByCategory(options.category, filteredProducts);
   }
   
   // Apply price filter
   if (options.minPrice || options.maxPrice) {
     filteredProducts = filterByPrice(
       options.minPrice || 0,
-      options.maxPrice || Infinity
+      options.maxPrice || Infinity,
+      filteredProducts
     );
   }
   
@@ -146,6 +147,40 @@ function getFilteredProducts(options = {}) {
   }
   
   return filteredProducts;
+}
+
+/**
+ * Convenience helper used by pages/shop.html.
+ * @param {string} query
+ * @param {string} category
+ * @param {string} sort
+ * @returns {Array}
+ */
+function filterAndSearchProducts(query = '', category = 'All', sort = 'default') {
+  let filtered = [...products];
+
+  if (query && query.trim() !== '') {
+    filtered = searchProducts(query, filtered);
+  }
+
+  if (category && category !== 'All') {
+    filtered = filterByCategory(category, filtered);
+  }
+
+  const sortMap = {
+    'name-asc': 'name-az',
+    'name-desc': 'name-za',
+    'price-low': 'price-low',
+    'price-high': 'price-high',
+    rating: 'rating'
+  };
+
+  const mappedSort = sortMap[sort];
+  if (mappedSort) {
+    filtered = sortProducts(filtered, mappedSort);
+  }
+
+  return filtered;
 }
 
 /**

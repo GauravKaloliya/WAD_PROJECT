@@ -416,7 +416,7 @@
                         return;
                     }
 
-                    const result = updateUserProfile(user.id, { email: newEmail });
+                    const result = updateUserProfile(user.id, { email: newEmail }, { showToast: false });
                     
                     if (result.success) {
                         document.getElementById('displayEmail').textContent = newEmail || 'Not provided';
@@ -458,7 +458,7 @@
                         marketingEmails: document.getElementById('marketingEmails').checked
                     };
 
-                    const result = updateUserProfile(user.id, { preferences });
+                    const result = updateUserProfile(user.id, { preferences }, { showToast: false });
                     if (result.success) {
                         showToast('Notification preferences saved! ✅', 'success');
                     }
@@ -479,7 +479,7 @@
                         preferences.addresses = addresses;
                     }
 
-                    const result = updateUserProfile(user.id, { preferences });
+                    const result = updateUserProfile(user.id, { preferences }, { showToast: false });
                     if (result.success) {
                         showToast('Preferences saved! ✅', 'success');
                     }
@@ -497,7 +497,7 @@
                         compactLayout
                     };
 
-                    const result = updateUserProfile(user.id, { preferences });
+                    const result = updateUserProfile(user.id, { preferences }, { showToast: false });
                     
                     if (result.success) {
                         applyTheme(theme);
@@ -511,18 +511,18 @@
 
                 document.getElementById('deleteAccountBtn').addEventListener('click', function() {
                     const modal = document.getElementById('deleteAccountModal');
-                    modal.classList.add('active');
+                    modal.classList.add('show');
                 });
 
                 document.getElementById('deleteModalClose').addEventListener('click', function() {
                     const modal = document.getElementById('deleteAccountModal');
-                    modal.classList.remove('active');
+                    modal.classList.remove('show');
                     document.getElementById('deletePassword').value = '';
                 });
 
                 document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
                     const modal = document.getElementById('deleteAccountModal');
-                    modal.classList.remove('active');
+                    modal.classList.remove('show');
                     document.getElementById('deletePassword').value = '';
                 });
 
@@ -538,7 +538,7 @@
                         const result = deleteAccount(user.id, password);
                         
                         if (result.success) {
-                            document.getElementById('deleteAccountModal').classList.remove('active');
+                            document.getElementById('deleteAccountModal').classList.remove('show');
                             showToast('Account deleted. See you soon! 👋', 'info');
                         }
                     }
@@ -546,7 +546,7 @@
 
                 document.getElementById('deleteAccountModal').addEventListener('click', function(e) {
                     if (e.target === this) {
-                        this.classList.remove('active');
+                        this.classList.remove('show');
                         document.getElementById('deletePassword').value = '';
                     }
                 });

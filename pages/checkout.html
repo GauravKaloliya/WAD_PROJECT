@@ -93,18 +93,15 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const isLoggedIn = isUserLoggedIn();
-            const cart = getCart();
+            const cart = isLoggedIn ? getCart() : [];
             const checkoutContent = document.getElementById('checkoutContent');
 
             if (!isLoggedIn) {
-                checkoutContent.innerHTML = `
-                    <div class="login-required">
-                        <div class="login-required-icon">🔒</div>
-                        <h2>Please login to checkout</h2>
-                        <p>You need to be logged in to complete your purchase</p>
-                        <a href="login.html" class="btn-primary" style="margin-top: 1rem;">Login</a>
-                    </div>
-                `;
+                if (typeof redirectToLogin === 'function') {
+                    redirectToLogin('Please login to checkout');
+                } else {
+                    window.location.href = 'login.html';
+                }
                 return;
             }
 
@@ -122,7 +119,7 @@
 
             const user = getCurrentUser();
             const subtotal = calculateSubtotal();
-            const tax = calculateTax(subtotal);
+            const tax = calculateTax();
             const total = calculateTotal();
 
             checkoutContent.innerHTML = `
@@ -222,15 +219,25 @@
 
                 const savedOrder = addOrder(order);
 
-                document.getElementById('orderNumber').textContent = savedOrder.id;
-                document.getElementById('deliveryDate').textContent = savedOrder.estimatedDelivery;
+                if (!savedOrder || savedOrder.success === false) {
+                    showToast(savedOrder?.message || 'Failed to place order', 'error');
+                    return;
+                }
+
+                document.getElementById('orderNumber').textContent = savedOrder.orderId;
+
+                const delivery = new Date(savedOrder.estimatedDelivery);
+                document.getElementById('deliveryDate').textContent = isNaN(delivery)
+                    ? savedOrder.estimatedDelivery
+                    : delivery.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
                 document.getElementById('successModal').classList.add('show');
             });
 
             const closeModalBtn = document.getElementById('closeModal');
             closeModalBtn.addEventListener('click', function() {
                 clearCart();
-                window.location.href = '../index.html';
+                window.location.href = typeof getPageUrl === 'function' ? getPageUrl('orders.html') : 'orders.html';
             });
         });
     </script>

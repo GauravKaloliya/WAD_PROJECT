@@ -272,7 +272,7 @@
             }
 
             function showOrderDetails(orderId) {
-                const ordersData = localStorage.getItem('happyGroceries_orders');
+                const ordersData = localStorage.getItem(typeof STORAGE_KEYS !== 'undefined' ? STORAGE_KEYS.ORDERS : 'happyGroceries_orders');
                 if (!ordersData) return;
                 
                 const allOrders = JSON.parse(ordersData);
@@ -362,24 +362,24 @@
                     </div>
                 `;
 
-                modal.classList.add('active');
+                modal.classList.add('show');
 
                 document.getElementById('reorderBtn').addEventListener('click', function() {
                     reorderItems(order.items);
-                    modal.classList.remove('active');
+                    modal.classList.remove('show');
                 });
 
                 document.getElementById('closeModalBtn').addEventListener('click', function() {
-                    modal.classList.remove('active');
+                    modal.classList.remove('show');
                 });
 
                 document.getElementById('modalClose').addEventListener('click', function() {
-                    modal.classList.remove('active');
+                    modal.classList.remove('show');
                 });
 
                 modal.addEventListener('click', function(e) {
                     if (e.target === modal) {
-                        modal.classList.remove('active');
+                        modal.classList.remove('show');
                     }
                 });
             }

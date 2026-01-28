@@ -11,8 +11,61 @@
 const STORAGE_KEYS = {
   USERS: 'happyGroceries_users',
   CURRENT_USER: 'happyGroceries_currentUser',
-  SESSION_TOKEN: 'happyGroceries_sessionToken'
+  SESSION_TOKEN: 'happyGroceries_sessionToken',
+  RETURN_URL: 'happyGroceries_returnUrl',
+  THEME: 'happyGroceries_theme',
+  CART: 'happyGroceries_cart',
+  ORDERS: 'happyGroceries_orders'
 };
+
+// ==========================================================================
+// Navigation & Redirect Helpers
+// ==========================================================================
+
+function isInPagesDir() {
+  return window.location.pathname.includes('/pages/');
+}
+
+function getHomeUrl() {
+  return isInPagesDir() ? '../index.html' : 'index.html';
+}
+
+function getPageUrl(pageFileName) {
+  return isInPagesDir() ? pageFileName : `pages/${pageFileName}`;
+}
+
+function setReturnUrl(url = window.location.href) {
+  localStorage.setItem(STORAGE_KEYS.RETURN_URL, url);
+}
+
+function consumeReturnUrl() {
+  const url = localStorage.getItem(STORAGE_KEYS.RETURN_URL);
+  localStorage.removeItem(STORAGE_KEYS.RETURN_URL);
+  return url;
+}
+
+function redirectAfterAuth(fallbackUrl = getHomeUrl()) {
+  const returnUrl = consumeReturnUrl();
+  window.location.href = returnUrl || fallbackUrl;
+}
+
+function redirectToLogin(message) {
+  setReturnUrl();
+  if (message) {
+    showToast(message, 'warning');
+  }
+
+  const loginUrl = getPageUrl('login.html');
+  setTimeout(() => {
+    window.location.href = loginUrl;
+  }, message ? 900 : 0);
+}
+
+function clearSession() {
+  localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+  localStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.RETURN_URL);
+}
 
 // ==========================================================================
 // User Management Functions
@@ -76,10 +129,10 @@ function registerUser(name, phone, email, password) {
     const loginResult = loginUser(phone, password);
     
     if (loginResult.success) {
-      showToast('🎉 Account created successfully!', 'success');
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1500);
+      return {
+        ...loginResult,
+        isNewUser: true
+      };
     }
     
     return loginResult;
@@ -132,9 +185,6 @@ function loginUser(phone, password) {
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
     localStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, JSON.stringify(sessionData));
     
-    // Show success message
-    showToast(`Welcome back, ${user.name.split(' ')[0]}! 👋`, 'success');
-    
     return { 
       success: true, 
       message: 'Login successful', 
@@ -150,26 +200,43 @@ function loginUser(phone, password) {
 
 /**
  * Logout user
+ * @param {Object} options
+ * @param {boolean} options.redirect
+ * @param {string} options.redirectUrl
+ * @param {number} options.delay
+ * @param {boolean} options.showToast
  */
-function logoutUser() {
+function logoutUser(options = {}) {
   try {
-    const user = getCurrentUser();
-    if (user) {
+    const {
+      redirect = true,
+      redirectUrl = getHomeUrl(),
+      delay = 800,
+      showToast: shouldShowToast = true
+    } = options;
+
+    let user = null;
+    try {
+      const userData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      user = userData ? JSON.parse(userData) : null;
+    } catch (e) {
+      user = null;
+    }
+
+    if (shouldShowToast && user?.name) {
       showToast(`Goodbye, ${user.name.split(' ')[0]}! See you soon! 👋`, 'info');
     }
-    
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-    localStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
-    
-    // Clear user-specific localStorage items
-    localStorage.removeItem('happyGroceries_cart');
-    
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1000);
-    
+
+    clearSession();
+
+    if (redirect) {
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, delay);
+    }
   } catch (error) {
     console.error('Logout error:', error);
+    clearSession();
   }
 }
 
@@ -177,10 +244,14 @@ function logoutUser() {
  * Update user profile
  * @param {string} userId - User ID
  * @param {Object} updatedData - Object with updated fields
+ * @param {Object} options
+ * @param {boolean} options.showToast
+ * @param {string} options.toastMessage
  * @returns {Object} - { success: boolean, message: string, user: object }
  */
-function updateUserProfile(userId, updatedData) {
+function updateUserProfile(userId, updatedData, options = {}) {
   try {
+    const { showToast: shouldShowToast = true, toastMessage = 'Profile updated successfully! ✅' } = options;
     const users = getUsers();
     const userIndex = users.findIndex(u => u.id === userId);
     
@@ -216,7 +287,9 @@ function updateUserProfile(userId, updatedData) {
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
     }
     
-    showToast('Profile updated successfully! ✅', 'success');
+    if (shouldShowToast) {
+      showToast(toastMessage, 'success');
+    }
     
     return { success: true, message: 'Profile updated successfully', user: user };
     
@@ -334,10 +407,15 @@ function getCurrentUser() {
     
     const user = JSON.parse(userData);
     const session = JSON.parse(sessionData);
+
+    if (!session?.expiresAt || session.userId !== user.id) {
+      clearSession();
+      return null;
+    }
     
     // Check if session expired
     if (new Date(session.expiresAt) < new Date()) {
-      logoutUser();
+      clearSession();
       return null;
     }
     
@@ -550,71 +628,38 @@ function createConfetti() {
 }
 
 // ==========================================================================
-// Auto-login on page load
+// Theme Helpers
 // ==========================================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-  restoreSession();
-  updateNavbar();
-  initializeTheme();
-});
-
-/**
- * Restore user session if valid token exists
- */
-function restoreSession() {
+function getSystemTheme() {
   try {
-    const sessionData = localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
-    const currentUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-    
-    if (!sessionData || !currentUser) return;
-    
-    const session = JSON.parse(sessionData);
-    
-    // Check if session expired
-    if (new Date(session.expiresAt) < new Date()) {
-      logoutUser();
-      return;
-    }
-    
-    // Session is valid, user stays logged in
-    const user = JSON.parse(currentUser);
-    console.log(`Welcome back, ${user.name}! Session restored.`);
-    
-  } catch (error) {
-    console.error('Session restore error:', error);
-    logoutUser();
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  } catch (e) {
+    return 'light';
   }
 }
 
-// ==========================================================================
-// Initialize dark mode preference
-// ==========================================================================
+function getThemePreference() {
+  const user = getCurrentUser();
+  return user?.preferences?.theme || localStorage.getItem(STORAGE_KEYS.THEME) || 'light';
+}
+
+function getEffectiveTheme(themePreference) {
+  if (themePreference === 'auto') return getSystemTheme();
+  if (themePreference === 'dark' || themePreference === 'light') return themePreference;
+  return 'light';
+}
+
+function applyTheme(themePreference) {
+  const effectiveTheme = getEffectiveTheme(themePreference);
+  document.documentElement.setAttribute('data-theme', effectiveTheme);
+  localStorage.setItem(STORAGE_KEYS.THEME, themePreference);
+}
 
 function initializeTheme() {
-  const user = getCurrentUser();
-  const savedTheme = user?.preferences?.theme || 
-                    localStorage.getItem('happyGroceries_theme') || 
-                    'light';
-  
-  setTheme(savedTheme);
-}
-
-/**
- * Set theme (light/dark)
- * @param {string} theme
- */
-function setTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('happyGroceries_theme', theme);
-  
-  // Update user preference if logged in
-  const user = getCurrentUser();
-  if (user) {
-    updateUserProfile(user.id, {
-      preferences: { ...user.preferences, theme }
-    });
-  }
+  applyTheme(getThemePreference());
 }
 
 /**
@@ -757,14 +802,14 @@ function addOrder(orderData) {
     };
     
     // Get existing orders
-    const ordersData = localStorage.getItem('happyGroceries_orders');
+    const ordersData = localStorage.getItem(STORAGE_KEYS.ORDERS);
     const allOrders = ordersData ? JSON.parse(ordersData) : [];
     
     // Add new order
     allOrders.push(order);
     
     // Save orders
-    localStorage.setItem('happyGroceries_orders', JSON.stringify(allOrders));
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(allOrders));
     
     showToast('Order placed successfully! 🎉', 'success');
     
@@ -783,7 +828,7 @@ function addOrder(orderData) {
  */
 function getUserOrders(userId) {
   try {
-    const ordersData = localStorage.getItem('happyGroceries_orders');
+    const ordersData = localStorage.getItem(STORAGE_KEYS.ORDERS);
     if (!ordersData) return [];
     
     const allOrders = JSON.parse(ordersData);
@@ -803,7 +848,7 @@ function getUserOrders(userId) {
  */
 function updateOrderStatus(orderId, status) {
   try {
-    const ordersData = localStorage.getItem('happyGroceries_orders');
+    const ordersData = localStorage.getItem(STORAGE_KEYS.ORDERS);
     if (!ordersData) {
       return { success: false, message: 'Orders not found' };
     }
@@ -816,7 +861,7 @@ function updateOrderStatus(orderId, status) {
     }
     
     allOrders[orderIndex].status = status;
-    localStorage.setItem('happyGroceries_orders', JSON.stringify(allOrders));
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(allOrders));
     
     return { success: true, message: 'Order status updated' };
     

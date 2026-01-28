@@ -101,7 +101,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (isUserLoggedIn()) {
-                window.location.href = '../index.html';
+                redirectAfterAuth();
                 return;
             }
 
@@ -146,12 +146,12 @@
                 const result = loginUser(phone, password);
 
                 if (result.success) {
-                    showToast('Login successful! 🎉');
+                    showToast('Login successful! 🎉', 'success');
                     setTimeout(() => {
-                        window.location.href = '../index.html';
-                    }, 1000);
+                        redirectAfterAuth();
+                    }, 800);
                 } else {
-                    passwordError.textContent = result.error;
+                    passwordError.textContent = result.message || 'Login failed';
                     passwordError.classList.add('show');
                 }
             });
