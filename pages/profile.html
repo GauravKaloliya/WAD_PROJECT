@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Happy Groceries 🛒</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html">🛒 Happy Groceries</a>
+            </div>
+            
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="categories.html" class="nav-link">Categories</a></li>
+                <li><a href="shop.html" class="nav-link">Shop</a></li>
+                <li><a href="cart.html" class="nav-link">Cart</a></li>
+                <li><a href="about.html" class="nav-link">About Us</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                
+                <a href="cart.html" class="cart-icon">
+                    🛒
+                    <span class="cart-counter" id="cartCounter">0</span>
+                </a>
+
+                <div class="auth-buttons" id="authButtons">
+                    <a href="login.html" class="btn-login">Login</a>
+                    <a href="signup.html" class="btn-signup">Sign Up</a>
+                </div>
+
+                <div class="user-profile" id="userProfile" style="display: none;">
+                    <button class="profile-btn" id="profileBtn">
+                        <span class="greeting">Welcome, <span id="userName">User</span>! 👋</span>
+                    </button>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <a href="profile.html">👤 View Profile</a>
+                        <a href="orders.html">📦 My Orders</a>
+                        <a href="wishlist.html">💖 Wishlist</a>
+                        <a href="settings.html">⚙️ Settings</a>
+                        <hr>
+                        <a href="#" id="logoutBtn">🚪 Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <div id="profileContent"></div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Happy Groceries. Made with 💖</p>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/search.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfile();
+
+            function loadProfile() {
+                const profileContent = document.getElementById('profileContent');
+                
+                if (!isUserLoggedIn()) {
+                    profileContent.innerHTML = `
+                        <div class="login-required">
+                            <div class="login-required-icon">🔒</div>
+                            <h2>Please login to view your profile</h2>
+                            <p>You need to be logged in to access your profile</p>
+                            <a href="login.html" class="btn-primary" style="margin-top: 1rem;">Login</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const user = getCurrentUser();
+                const memberSince = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                }) : 'Recently';
+                
+                const avatarEmoji = getAvatarEmoji(user.name);
+
+                profileContent.innerHTML = `
+                    <h1 class="section-title">👤 My Profile</h1>
+                    
+                    <div class="profile-layout">
+                        <div class="profile-sidebar">
+                            <div class="avatar-large">${avatarEmoji}</div>
+                            <h2 class="profile-name">${user.name}</h2>
+                            <p class="member-badge">Member since ${memberSince}</p>
+                            <button class="btn-primary mt-2" id="editProfileBtn">✏️ Edit Profile</button>
+                        </div>
+                        
+                        <div class="profile-content">
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <span class="section-icon">👤</span>
+                                    <h3>Personal Information</h3>
+                                </div>
+                                
+                                <div id="personalInfoDisplay">
+                                    <div class="info-row">
+                                        <label>Full Name:</label>
+                                        <span id="displayName">${user.name}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <label>Email:</label>
+                                        <span id="displayEmail">${user.email || 'Not provided'}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <label>Phone Number:</label>
+                                        <span>${user.phone}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <label>Member Since:</label>
+                                        <span>${memberSince}</span>
+                                    </div>
+                                </div>
+                                
+                                <div id="personalInfoEdit" class="hidden">
+                                    <div class="form-group">
+                                        <label for="editName">Full Name</label>
+                                        <input type="text" id="editName" value="${user.name}" placeholder="Enter your full name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editEmail">Email</label>
+                                        <input type="email" id="editEmail" value="${user.email || ''}" placeholder="Enter your email">
+                                    </div>
+                                    <div class="info-row">
+                                        <label>Phone Number:</label>
+                                        <span class="readonly">${user.phone}</span>
+                                    </div>
+                                    <div class="button-group">
+                                        <button class="btn-secondary" id="cancelEditBtn">Cancel</button>
+                                        <button class="btn-primary" id="saveProfileBtn">Save Changes</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <span class="section-icon">🔐</span>
+                                    <h3>Account Status</h3>
+                                </div>
+                                <div class="account-status">
+                                    <span class="status-badge active">Active ✅</span>
+                                </div>
+                                
+                                <div class="password-change">
+                                    <h4>Change Password</h4>
+                                    <div class="form-group">
+                                        <label for="currentPassword">Current Password</label>
+                                        <input type="password" id="currentPassword" placeholder="Enter current password">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newPassword">New Password</label>
+                                        <input type="password" id="newPassword" placeholder="Enter new password">
+                                        <div class="password-strength">
+                                            <div class="strength-bar">
+                                                <div class="strength-fill" id="strengthFill"></div>
+                                            </div>
+                                            <span class="strength-text" id="strengthText">Password Strength</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirmPassword">Confirm Password</label>
+                                        <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                                    </div>
+                                    <button class="btn-primary" id="updatePasswordBtn">Update Password</button>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <span class="section-icon">🏠</span>
+                                    <h3>Address Book</h3>
+                                    <button class="btn-secondary btn-sm" id="addAddressBtn">+ Add Address</button>
+                                </div>
+                                
+                                <div id="addressesList">
+                                    ${(user.addresses && user.addresses.length > 0) ? user.addresses.map((addr, index) => `
+                                        <div class="address-card" data-address-index="${index}">
+                                            <div class="address-header">
+                                                <h4>${addr.label || 'Address ' + (index + 1)}</h4>
+                                                ${addr.isDefault ? '<span class="default-badge">Default</span>' : ''}
+                                            </div>
+                                            <p class="address-text">${addr.street}, ${addr.city}, ${addr.state} ${addr.postalCode}</p>
+                                            ${addr.phone ? `<p class="address-phone">📞 ${addr.phone}</p>` : ''}
+                                            <div class="address-actions">
+                                                <button class="btn-secondary btn-sm edit-address" data-index="${index}">✏️ Edit</button>
+                                                <button class="btn-secondary btn-sm set-default" data-index="${index}">⭐ Set Default</button>
+                                                <button class="btn-danger btn-sm delete-address" data-index="${index}">🗑️ Delete</button>
+                                            </div>
+                                        </div>
+                                    `).join('') : `
+                                        <div class="empty-state">
+                                            <div class="empty-state-icon">📬</div>
+                                            <h4>No addresses saved yet</h4>
+                                            <p>Add one for faster checkout!</p>
+                                        </div>
+                                    `}
+                                </div>
+                                
+                                <div id="addressForm" class="hidden">
+                                    <h4 id="addressFormTitle">Add New Address</h4>
+                                    <div class="form-group">
+                                        <label for="addressLabel">Address Label</label>
+                                        <select id="addressLabel">
+                                            <option value="Home">🏠 Home</option>
+                                            <option value="Work">💼 Work</option>
+                                            <option value="Other">📦 Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="addressStreet">Street Address</label>
+                                        <input type="text" id="addressStreet" placeholder="Enter street address" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="addressCity">City</label>
+                                        <input type="text" id="addressCity" placeholder="Enter city" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="addressState">State/Province</label>
+                                        <input type="text" id="addressState" placeholder="Enter state" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="addressPostal">Postal Code</label>
+                                        <input type="text" id="addressPostal" placeholder="Enter postal code" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="addressPhone">Phone (Optional)</label>
+                                        <input type="tel" id="addressPhone" placeholder="Enter phone number">
+                                    </div>
+                                    <div class="button-group">
+                                        <button class="btn-secondary" id="cancelAddressBtn">Cancel</button>
+                                        <button class="btn-primary" id="saveAddressBtn">Save Address</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <span class="section-icon">📧</span>
+                                    <h3>Preferences</h3>
+                                </div>
+                                
+                                <div class="preferences">
+                                    <div class="preference-item">
+                                        <div class="preference-info">
+                                            <h4>Email Notifications</h4>
+                                            <p>Order updates and promotions</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="emailNotifications" ${user.preferences?.emailNotifications ? 'checked' : ''}>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="preference-item">
+                                        <div class="preference-info">
+                                            <h4>SMS Notifications</h4>
+                                            <p>Order updates and new deals</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="smsNotifications" ${user.preferences?.smsNotifications ? 'checked' : ''}>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="preference-item">
+                                        <div class="preference-info">
+                                            <h4>Marketing Emails</h4>
+                                            <p>Newsletters and special offers</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="marketingEmails" ${user.preferences?.marketingEmails ? 'checked' : ''}>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn-primary mt-2" id="savePreferencesBtn">Save Preferences</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                attachProfileEventListeners();
+            }
+
+            function getAvatarEmoji(name) {
+                const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const emojis = ['😊', '🙂', '😄', '🌟', '💫', '🌈', '🎉', '🎊', '🌸', '🌺'];
+                const index = initials.charCodeAt(0) % emojis.length;
+                return emojis[index];
+            }
+
+            function attachProfileEventListeners() {
+                const user = getCurrentUser();
+
+                document.getElementById('editProfileBtn').addEventListener('click', function() {
+                    document.getElementById('personalInfoDisplay').classList.add('hidden');
+                    document.getElementById('personalInfoEdit').classList.remove('hidden');
+                });
+
+                document.getElementById('cancelEditBtn').addEventListener('click', function() {
+                    document.getElementById('personalInfoEdit').classList.add('hidden');
+                    document.getElementById('personalInfoDisplay').classList.remove('hidden');
+                    
+                    document.getElementById('editName').value = user.name;
+                    document.getElementById('editEmail').value = user.email || '';
+                });
+
+                document.getElementById('saveProfileBtn').addEventListener('click', function() {
+                    const newName = document.getElementById('editName').value.trim();
+                    const newEmail = document.getElementById('editEmail').value.trim();
+
+                    if (newName.length < 3) {
+                        showToast('Name must be at least 3 characters', 'error');
+                        return;
+                    }
+
+                    if (newEmail && !validateEmail(newEmail)) {
+                        showToast('Please enter a valid email', 'error');
+                        return;
+                    }
+
+                    const result = updateUserProfile(user.id, { name: newName, email: newEmail });
+                    
+                    if (result.success) {
+                        document.getElementById('displayName').textContent = newName;
+                        document.getElementById('displayEmail').textContent = newEmail || 'Not provided';
+                        document.getElementById('personalInfoEdit').classList.add('hidden');
+                        document.getElementById('personalInfoDisplay').classList.remove('hidden');
+                        loadProfile();
+                    }
+                });
+
+                document.getElementById('newPassword').addEventListener('input', function() {
+                    const password = this.value;
+                    const strength = checkPasswordStrength(password);
+                    const strengthFill = document.getElementById('strengthFill');
+                    const strengthText = document.getElementById('strengthText');
+
+                    const widths = { weak: '33%', medium: '66%', strong: '100%' };
+                    const colors = { weak: '#f44336', medium: '#FF9800', strong: '#4CAF50' };
+
+                    strengthFill.style.width = widths[strength.strength];
+                    strengthFill.style.backgroundColor = colors[strength.strength];
+                    strengthText.textContent = strength.strength.charAt(0).toUpperCase() + strength.strength.slice(1);
+                });
+
+                document.getElementById('updatePasswordBtn').addEventListener('click', function() {
+                    const currentPassword = document.getElementById('currentPassword').value;
+                    const newPassword = document.getElementById('newPassword').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+
+                    if (!currentPassword || !newPassword || !confirmPassword) {
+                        showToast('Please fill all password fields', 'error');
+                        return;
+                    }
+
+                    if (newPassword !== confirmPassword) {
+                        showToast('New passwords do not match', 'error');
+                        return;
+                    }
+
+                    const result = changePassword(user.id, currentPassword, newPassword);
+                    
+                    if (result.success) {
+                        document.getElementById('currentPassword').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                        document.getElementById('strengthFill').style.width = '0%';
+                        document.getElementById('strengthText').textContent = 'Password Strength';
+                    }
+                });
+
+                document.getElementById('addAddressBtn').addEventListener('click', function() {
+                    document.getElementById('addressForm').classList.remove('hidden');
+                    document.getElementById('addressFormTitle').textContent = 'Add New Address';
+                    document.getElementById('addressForm').dataset.editIndex = '';
+                    
+                    document.getElementById('addressLabel').value = 'Home';
+                    document.getElementById('addressStreet').value = '';
+                    document.getElementById('addressCity').value = '';
+                    document.getElementById('addressState').value = '';
+                    document.getElementById('addressPostal').value = '';
+                    document.getElementById('addressPhone').value = '';
+                });
+
+                document.getElementById('cancelAddressBtn').addEventListener('click', function() {
+                    document.getElementById('addressForm').classList.add('hidden');
+                    document.getElementById('addressForm').dataset.editIndex = '';
+                });
+
+                document.getElementById('saveAddressBtn').addEventListener('click', function() {
+                    const label = document.getElementById('addressLabel').value;
+                    const street = document.getElementById('addressStreet').value.trim();
+                    const city = document.getElementById('addressCity').value.trim();
+                    const state = document.getElementById('addressState').value.trim();
+                    const postal = document.getElementById('addressPostal').value.trim();
+                    const phone = document.getElementById('addressPhone').value.trim();
+
+                    if (!street || !city || !state || !postal) {
+                        showToast('Please fill all required fields', 'error');
+                        return;
+                    }
+
+                    const newAddress = {
+                        label,
+                        street,
+                        city,
+                        state,
+                        postalCode: postal,
+                        phone,
+                        isDefault: false
+                    };
+
+                    const editIndex = document.getElementById('addressForm').dataset.editIndex;
+                    let addresses = user.addresses || [];
+
+                    if (editIndex !== '') {
+                        addresses[parseInt(editIndex)] = newAddress;
+                        showToast('Address updated successfully! ✅', 'success');
+                    } else {
+                        if (addresses.length === 0) {
+                            newAddress.isDefault = true;
+                        }
+                        addresses.push(newAddress);
+                        showToast('Address added successfully! ✅', 'success');
+                    }
+
+                    const result = updateUserProfile(user.id, { addresses });
+                    if (result.success) {
+                        document.getElementById('addressForm').classList.add('hidden');
+                        loadProfile();
+                    }
+                });
+
+                document.querySelectorAll('.edit-address').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.dataset.index;
+                        const addresses = user.addresses || [];
+                        const address = addresses[index];
+
+                        document.getElementById('addressForm').classList.remove('hidden');
+                        document.getElementById('addressFormTitle').textContent = 'Edit Address';
+                        document.getElementById('addressForm').dataset.editIndex = index;
+
+                        document.getElementById('addressLabel').value = address.label;
+                        document.getElementById('addressStreet').value = address.street;
+                        document.getElementById('addressCity').value = address.city;
+                        document.getElementById('addressState').value = address.state;
+                        document.getElementById('addressPostal').value = address.postalCode;
+                        document.getElementById('addressPhone').value = address.phone || '';
+                    });
+                });
+
+                document.querySelectorAll('.set-default').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        let addresses = user.addresses || [];
+                        
+                        addresses = addresses.map((addr, i) => ({
+                            ...addr,
+                            isDefault: i === index
+                        }));
+
+                        const result = updateUserProfile(user.id, { addresses });
+                        if (result.success) {
+                            showToast('Default address updated! ⭐', 'success');
+                            loadProfile();
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.delete-address').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (confirm('Are you sure you want to delete this address?')) {
+                            const index = parseInt(this.dataset.index);
+                            let addresses = user.addresses || [];
+                            
+                            if (addresses[index].isDefault && addresses.length > 1) {
+                                addresses[0].isDefault = true;
+                            }
+                            
+                            addresses.splice(index, 1);
+
+                            const result = updateUserProfile(user.id, { addresses });
+                            if (result.success) {
+                                showToast('Address deleted! 🗑️', 'success');
+                                loadProfile();
+                            }
+                        }
+                    });
+                });
+
+                document.getElementById('savePreferencesBtn').addEventListener('click', function() {
+                    const preferences = {
+                        emailNotifications: document.getElementById('emailNotifications').checked,
+                        smsNotifications: document.getElementById('smsNotifications').checked,
+                        marketingEmails: document.getElementById('marketingEmails').checked
+                    };
+
+                    const result = updateUserProfile(user.id, { preferences });
+                    if (result.success) {
+                        showToast('Preferences saved! ✅', 'success');
+                    }
+                });
+            }
+
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+        });
+    </script>
+</body>
+</html>
