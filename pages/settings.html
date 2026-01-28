@@ -551,30 +551,6 @@
                     }
                 });
             }
-
-            function validateEmail(email) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return emailRegex.test(email);
-            }
-
-            function applyTheme(theme) {
-                const html = document.documentElement;
-                
-                if (theme === 'dark') {
-                    html.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('happyGroceries_theme', 'dark');
-                } else if (theme === 'light') {
-                    html.removeAttribute('data-theme');
-                    localStorage.setItem('happyGroceries_theme', 'light');
-                } else {
-                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        html.setAttribute('data-theme', 'dark');
-                    } else {
-                        html.removeAttribute('data-theme');
-                    }
-                    localStorage.removeItem('happyGroceries_theme');
-                }
-            }
         });
     </script>
 </body>

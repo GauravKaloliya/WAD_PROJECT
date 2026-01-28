@@ -430,6 +430,17 @@ function validatePassword(password) {
 }
 
 /**
+ * Validate email address
+ * @param {string} email
+ * @returns {boolean}
+ */
+function validateEmail(email) {
+  if (!email) return true; // Email is optional
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+}
+
+/**
  * Simple password hashing (not production-ready)
  * @param {string} password
  * @returns {string}
