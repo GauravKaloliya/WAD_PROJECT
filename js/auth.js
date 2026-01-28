@@ -606,6 +606,215 @@ function setTheme(theme) {
   }
 }
 
+/**
+ * Check if product is in user's wishlist
+ * @param {number} productId
+ * @returns {boolean}
+ */
+function isInWishlist(productId) {
+  const user = getCurrentUser();
+  if (!user) return false;
+  
+  const wishlist = user.wishlist || [];
+  return wishlist.includes(productId);
+}
+
+/**
+ * Update user's wishlist
+ * @param {number} productId
+ * @param {boolean} add - true to add, false to remove
+ * @returns {Object} - { success: boolean, message: string }
+ */
+function updateUserWishlist(productId, add = true) {
+  try {
+    const user = getCurrentUser();
+    if (!user) {
+      return { success: false, message: 'Please login to use wishlist' };
+    }
+    
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.id === user.id);
+    
+    if (userIndex === -1) {
+      return { success: false, message: 'User not found' };
+    }
+    
+    let wishlist = users[userIndex].wishlist || [];
+    
+    if (add) {
+      if (!wishlist.includes(productId)) {
+        wishlist.push(productId);
+      }
+    } else {
+      wishlist = wishlist.filter(id => id !== productId);
+    }
+    
+    users[userIndex].wishlist = wishlist;
+    
+    // Save updated users
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    
+    // Update current user session
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(users[userIndex]));
+    
+    return { success: true, message: 'Wishlist updated' };
+    
+  } catch (error) {
+    console.error('Update wishlist error:', error);
+    return { success: false, message: 'Failed to update wishlist' };
+  }
+}
+
+/**
+ * Get all products from search.js
+ * @returns {Array}
+ */
+function getAllProducts() {
+  if (typeof products !== 'undefined') {
+    return products;
+  }
+  return [];
+}
+
+/**
+ * Get product by ID
+ * @param {number} productId
+ * @returns {Object|null}
+ */
+function getProductById(productId) {
+  const allProducts = getAllProducts();
+  return allProducts.find(p => p.id === productId) || null;
+}
+
+/**
+ * Render star rating
+ * @param {number} rating
+ * @returns {string}
+ */
+function renderStars(rating) {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  
+  let stars = '★'.repeat(fullStars);
+  if (hasHalfStar) stars += '½';
+  stars += '☆'.repeat(emptyStars);
+  
+  return stars;
+}
+
+/**
+ * Create and save a new order
+ * @param {Object} orderData - Order information
+ * @returns {Object} - Saved order with ID
+ */
+function addOrder(orderData) {
+  try {
+    const user = getCurrentUser();
+    if (!user) {
+      return { success: false, message: 'Please login to place an order' };
+    }
+    
+    // Generate order ID
+    const orderId = 'ORD-' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 1000);
+    
+    // Calculate estimated delivery (3-5 days from now)
+    const deliveryDays = Math.floor(Math.random() * 3) + 3;
+    const estimatedDelivery = new Date();
+    estimatedDelivery.setDate(estimatedDelivery.getDate() + deliveryDays);
+    
+    // Create order object
+    const order = {
+      orderId: orderId,
+      userId: user.id,
+      date: new Date().toISOString(),
+      items: orderData.items.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: parseFloat(item.price),
+        qty: parseInt(item.quantity),
+        emoji: item.emoji,
+        category: item.category
+      })),
+      subtotal: parseFloat(orderData.subtotal),
+      tax: parseFloat(orderData.tax),
+      total: parseFloat(orderData.total),
+      status: 'processing',
+      deliveryAddress: orderData.address,
+      estimatedDelivery: estimatedDelivery.toISOString(),
+      trackingNumber: 'TRACK-' + Date.now().toString().slice(-8)
+    };
+    
+    // Get existing orders
+    const ordersData = localStorage.getItem('happyGroceries_orders');
+    const allOrders = ordersData ? JSON.parse(ordersData) : [];
+    
+    // Add new order
+    allOrders.push(order);
+    
+    // Save orders
+    localStorage.setItem('happyGroceries_orders', JSON.stringify(allOrders));
+    
+    showToast('Order placed successfully! 🎉', 'success');
+    
+    return order;
+    
+  } catch (error) {
+    console.error('Add order error:', error);
+    return { success: false, message: 'Failed to place order' };
+  }
+}
+
+/**
+ * Get orders for a user
+ * @param {string} userId
+ * @returns {Array}
+ */
+function getUserOrders(userId) {
+  try {
+    const ordersData = localStorage.getItem('happyGroceries_orders');
+    if (!ordersData) return [];
+    
+    const allOrders = JSON.parse(ordersData);
+    return allOrders.filter(order => order.userId === userId);
+    
+  } catch (error) {
+    console.error('Get orders error:', error);
+    return [];
+  }
+}
+
+/**
+ * Update order status
+ * @param {string} orderId
+ * @param {string} status - 'processing', 'shipped', 'delivered'
+ * @returns {Object}
+ */
+function updateOrderStatus(orderId, status) {
+  try {
+    const ordersData = localStorage.getItem('happyGroceries_orders');
+    if (!ordersData) {
+      return { success: false, message: 'Orders not found' };
+    }
+    
+    const allOrders = JSON.parse(ordersData);
+    const orderIndex = allOrders.findIndex(order => order.orderId === orderId);
+    
+    if (orderIndex === -1) {
+      return { success: false, message: 'Order not found' };
+    }
+    
+    allOrders[orderIndex].status = status;
+    localStorage.setItem('happyGroceries_orders', JSON.stringify(allOrders));
+    
+    return { success: true, message: 'Order status updated' };
+    
+  } catch (error) {
+    console.error('Update order status error:', error);
+    return { success: false, message: 'Failed to update order status' };
+  }
+}
+
 // ==========================================================================
 // Export functions for use in other files (if using modules)
 // ==========================================================================

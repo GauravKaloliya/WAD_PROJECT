@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Happy Groceries 🛒</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html">🛒 Happy Groceries</a>
+            </div>
+            
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="categories.html" class="nav-link">Categories</a></li>
+                <li><a href="shop.html" class="nav-link">Shop</a></li>
+                <li><a href="cart.html" class="nav-link">Cart</a></li>
+                <li><a href="about.html" class="nav-link">About Us</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                
+                <a href="cart.html" class="cart-icon">
+                    🛒
+                    <span class="cart-counter" id="cartCounter">0</span>
+                </a>
+
+                <div class="auth-buttons" id="authButtons">
+                    <a href="login.html" class="btn-login">Login</a>
+                    <a href="signup.html" class="btn-signup">Sign Up</a>
+                </div>
+
+                <div class="user-profile" id="userProfile" style="display: none;">
+                    <button class="profile-btn" id="profileBtn">
+                        <span class="greeting">Welcome, <span id="userName">User</span>! 👋</span>
+                    </button>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <a href="profile.html">👤 View Profile</a>
+                        <a href="orders.html">📦 My Orders</a>
+                        <a href="wishlist.html">💖 Wishlist</a>
+                        <a href="settings.html">⚙️ Settings</a>
+                        <hr>
+                        <a href="#" id="logoutBtn">🚪 Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <div id="settingsContent"></div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Happy Groceries. Made with 💖</p>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="modal" id="deleteAccountModal">
+        <div class="modal-content modal-danger">
+            <div class="modal-header">
+                <h3>⚠️ Delete Account</h3>
+                <button class="modal-close" id="deleteModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="warning-text">Are you sure you want to delete your account? This action cannot be undone.</p>
+                <p class="warning-text">All your data including orders, wishlist, cart, and preferences will be permanently deleted.</p>
+                <div class="form-group">
+                    <label for="deletePassword">Enter your password to confirm:</label>
+                    <input type="password" id="deletePassword" placeholder="Your password">
+                </div>
+                <div class="button-group mt-2">
+                    <button class="btn-secondary" id="cancelDeleteBtn">Cancel</button>
+                    <button class="btn-danger" id="confirmDeleteBtn">Yes, Delete My Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/search.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+
+            function loadSettings() {
+                const settingsContent = document.getElementById('settingsContent');
+                
+                if (!isUserLoggedIn()) {
+                    settingsContent.innerHTML = `
+                        <div class="login-required">
+                            <div class="login-required-icon">🔒</div>
+                            <h2>Please login to access settings</h2>
+                            <p>You need to be logged in to change your settings</p>
+                            <a href="login.html" class="btn-primary" style="margin-top: 1rem;">Login</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const user = getCurrentUser();
+                const preferences = user.preferences || {};
+
+                settingsContent.innerHTML = `
+                    <h1 class="section-title">⚙️ Settings</h1>
+                    
+                    <div class="settings-grid">
+                        <div class="settings-column">
+                            <div class="settings-section">
+                                <div class="section-header">
+                                    <span class="section-icon">👤</span>
+                                    <h3>Account Settings</h3>
+                                </div>
+                                
+                                <div class="settings-row">
+                                    <div class="settings-label">
+                                        <label>Phone Number</label>
+                                        <span class="readonly">${user.phone}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="settings-row">
+                                    <div class="settings-label">
+                                        <label>Email</label>
+                                        <span id="displayEmail">${user.email || 'Not provided'}</span>
+                                    </div>
+                                    <button class="btn-secondary btn-sm" id="editEmailBtn">Edit</button>
+                                </div>
+                                
+                                <div class="email-edit-form hidden" id="emailEditForm">
+                                    <div class="form-group">
+                                        <label for="newEmail">New Email</label>
+                                        <input type="email" id="newEmail" value="${user.email || ''}" placeholder="Enter new email">
+                                    </div>
+                                    <div class="button-group">
+                                        <button class="btn-secondary btn-sm" id="cancelEmailBtn">Cancel</button>
+                                        <button class="btn-primary btn-sm" id="saveEmailBtn">Save</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <div class="section-header">
+                                    <span class="section-icon">🔐</span>
+                                    <h3>Security</h3>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="currentPassword">Current Password</label>
+                                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                                </div>
+                                <div class="form-group">
+                                    <label for="newPassword">New Password</label>
+                                    <input type="password" id="newPassword" placeholder="Enter new password">
+                                    <div class="password-strength">
+                                        <div class="strength-bar">
+                                            <div class="strength-fill" id="strengthFill"></div>
+                                        </div>
+                                        <span class="strength-text" id="strengthText">Password Strength</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirm Password</label>
+                                    <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                                </div>
+                                <button class="btn-primary" id="changePasswordBtn">Change Password</button>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <div class="section-header">
+                                    <span class="section-icon">📧</span>
+                                    <h3>Privacy & Notifications</h3>
+                                </div>
+                                
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h4>Email Notifications</h4>
+                                        <p>Order updates and promotional offers</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="emailNotifications" ${preferences.emailNotifications ? 'checked' : ''}>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h4>SMS Notifications</h4>
+                                        <p>Order updates via SMS</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="smsNotifications" ${preferences.smsNotifications ? 'checked' : ''}>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h4>Marketing Emails</h4>
+                                        <p>Weekly newsletter and special offers</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="marketingEmails" ${preferences.marketingEmails ? 'checked' : ''}>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <button class="btn-primary mt-2" id="saveNotificationsBtn">Save Notifications</button>
+                                
+                                <div class="mt-3">
+                                    <a href="about.html#privacy" class="link-secondary">Read Privacy Policy →</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-column">
+                            <div class="settings-section">
+                                <div class="section-header">
+                                    <span class="section-icon">⚙️</span>
+                                    <h3>Preferences</h3>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="defaultAddress">Default Delivery Address</label>
+                                    <select id="defaultAddress">
+                                        <option value="">Select default address</option>
+                                        ${(user.addresses || []).map((addr, index) => `
+                                            <option value="${index}" ${addr.isDefault ? 'selected' : ''}>
+                                                ${addr.label || 'Address ' + (index + 1)} - ${addr.city}
+                                            </option>
+                                        `).join('')}
+                                        ${(user.addresses || []).length === 0 ? '<option value="" disabled>No addresses saved</option>' : ''}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="currency">Currency</label>
+                                    <select id="currency" disabled>
+                                        <option value="INR">₹ INR (Indian Rupee)</option>
+                                    </select>
+                                    <small class="text-muted">Currency cannot be changed</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="language">Language Preference</label>
+                                    <select id="language">
+                                        <option value="en" selected>🇬🇧 English</option>
+                                        <option value="hi">🇮🇳 Hindi</option>
+                                        <option value="es">🇪🇸 Spanish</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="btn-primary" id="savePreferencesBtn">Save Preferences</button>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <div class="section-header">
+                                    <span class="section-icon">🎨</span>
+                                    <h3>Appearance</h3>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Theme Preference</label>
+                                    <div class="theme-options">
+                                        <label class="theme-option">
+                                            <input type="radio" name="theme" value="light" ${preferences.theme === 'light' ? 'checked' : ''}>
+                                            <span class="theme-option-content">
+                                                <span class="theme-icon">☀️</span>
+                                                <span>Light Mode</span>
+                                            </span>
+                                        </label>
+                                        <label class="theme-option">
+                                            <input type="radio" name="theme" value="dark" ${preferences.theme === 'dark' ? 'checked' : ''}>
+                                            <span class="theme-option-content">
+                                                <span class="theme-icon">🌙</span>
+                                                <span>Dark Mode</span>
+                                            </span>
+                                        </label>
+                                        <label class="theme-option">
+                                            <input type="radio" name="theme" value="auto" ${(!preferences.theme || preferences.theme === 'auto') ? 'checked' : ''}>
+                                            <span class="theme-option-content">
+                                                <span class="theme-icon">🔄</span>
+                                                <span>Auto (System)</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="fontSize">Font Size</label>
+                                    <select id="fontSize">
+                                        <option value="small" ${preferences.fontSize === 'small' ? 'selected' : ''}>Small</option>
+                                        <option value="normal" ${(!preferences.fontSize || preferences.fontSize === 'normal') ? 'selected' : ''}>Normal</option>
+                                        <option value="large" ${preferences.fontSize === 'large' ? 'selected' : ''}>Large</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h4>Compact Layout</h4>
+                                        <p>Use more compact spacing</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="compactLayout" ${preferences.compactLayout ? 'checked' : ''}>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <button class="btn-primary mt-2" id="saveAppearanceBtn">Save Appearance</button>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <div class="section-header">
+                                    <span class="section-icon">📥</span>
+                                    <h3>Data & Privacy</h3>
+                                </div>
+                                
+                                <button class="btn-secondary w-full" id="downloadDataBtn">
+                                    📥 Download My Data
+                                </button>
+                                
+                                <hr class="my-3">
+                                
+                                <div class="danger-zone">
+                                    <h4 class="danger-zone-title">Danger Zone</h4>
+                                    <p class="danger-zone-text">Once you delete your account, there is no going back. Please be certain.</p>
+                                    <button class="btn-danger" id="deleteAccountBtn">
+                                        🗑️ Delete My Account
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <div class="section-header">
+                                    <span class="section-icon">💬</span>
+                                    <h3>Feedback & Support</h3>
+                                </div>
+                                
+                                <div class="support-links">
+                                    <a href="about.html#contact" class="support-link">
+                                        <span>🐛</span>
+                                        <span>Report a Bug</span>
+                                    </a>
+                                    <a href="about.html#contact" class="support-link">
+                                        <span>💡</span>
+                                        <span>Suggest a Feature</span>
+                                    </a>
+                                    <a href="#" class="support-link">
+                                        <span>❓</span>
+                                        <span>Help & FAQ</span>
+                                    </a>
+                                    <a href="about.html#contact" class="support-link">
+                                        <span>📧</span>
+                                        <span>Contact Support</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                attachSettingsEventListeners();
+            }
+
+            function attachSettingsEventListeners() {
+                const user = getCurrentUser();
+
+                document.getElementById('newPassword').addEventListener('input', function() {
+                    const password = this.value;
+                    const strength = checkPasswordStrength(password);
+                    const strengthFill = document.getElementById('strengthFill');
+                    const strengthText = document.getElementById('strengthText');
+
+                    const widths = { weak: '33%', medium: '66%', strong: '100%' };
+                    const colors = { weak: '#f44336', medium: '#FF9800', strong: '#4CAF50' };
+
+                    strengthFill.style.width = widths[strength.strength];
+                    strengthFill.style.backgroundColor = colors[strength.strength];
+                    strengthText.textContent = strength.strength.charAt(0).toUpperCase() + strength.strength.slice(1);
+                });
+
+                document.getElementById('editEmailBtn').addEventListener('click', function() {
+                    document.getElementById('emailEditForm').classList.remove('hidden');
+                });
+
+                document.getElementById('cancelEmailBtn').addEventListener('click', function() {
+                    document.getElementById('emailEditForm').classList.add('hidden');
+                    document.getElementById('newEmail').value = user.email || '';
+                });
+
+                document.getElementById('saveEmailBtn').addEventListener('click', function() {
+                    const newEmail = document.getElementById('newEmail').value.trim();
+
+                    if (newEmail && !validateEmail(newEmail)) {
+                        showToast('Please enter a valid email', 'error');
+                        return;
+                    }
+
+                    const result = updateUserProfile(user.id, { email: newEmail });
+                    
+                    if (result.success) {
+                        document.getElementById('displayEmail').textContent = newEmail || 'Not provided';
+                        document.getElementById('emailEditForm').classList.add('hidden');
+                        showToast('Email updated! ✅', 'success');
+                    }
+                });
+
+                document.getElementById('changePasswordBtn').addEventListener('click', function() {
+                    const currentPassword = document.getElementById('currentPassword').value;
+                    const newPassword = document.getElementById('newPassword').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+
+                    if (!currentPassword || !newPassword || !confirmPassword) {
+                        showToast('Please fill all password fields', 'error');
+                        return;
+                    }
+
+                    if (newPassword !== confirmPassword) {
+                        showToast('New passwords do not match', 'error');
+                        return;
+                    }
+
+                    const result = changePassword(user.id, currentPassword, newPassword);
+                    
+                    if (result.success) {
+                        document.getElementById('currentPassword').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                        document.getElementById('strengthFill').style.width = '0%';
+                        document.getElementById('strengthText').textContent = 'Password Strength';
+                    }
+                });
+
+                document.getElementById('saveNotificationsBtn').addEventListener('click', function() {
+                    const preferences = {
+                        emailNotifications: document.getElementById('emailNotifications').checked,
+                        smsNotifications: document.getElementById('smsNotifications').checked,
+                        marketingEmails: document.getElementById('marketingEmails').checked
+                    };
+
+                    const result = updateUserProfile(user.id, { preferences });
+                    if (result.success) {
+                        showToast('Notification preferences saved! ✅', 'success');
+                    }
+                });
+
+                document.getElementById('savePreferencesBtn').addEventListener('click', function() {
+                    const defaultAddressIndex = document.getElementById('defaultAddress').value;
+                    const language = document.getElementById('language').value;
+                    
+                    let preferences = { ...user.preferences, language };
+                    
+                    if (defaultAddressIndex !== '') {
+                        let addresses = user.addresses || [];
+                        addresses = addresses.map((addr, index) => ({
+                            ...addr,
+                            isDefault: index === parseInt(defaultAddressIndex)
+                        }));
+                        preferences.addresses = addresses;
+                    }
+
+                    const result = updateUserProfile(user.id, { preferences });
+                    if (result.success) {
+                        showToast('Preferences saved! ✅', 'success');
+                    }
+                });
+
+                document.getElementById('saveAppearanceBtn').addEventListener('click', function() {
+                    const theme = document.querySelector('input[name="theme"]:checked').value;
+                    const fontSize = document.getElementById('fontSize').value;
+                    const compactLayout = document.getElementById('compactLayout').checked;
+                    
+                    const preferences = {
+                        ...user.preferences,
+                        theme,
+                        fontSize,
+                        compactLayout
+                    };
+
+                    const result = updateUserProfile(user.id, { preferences });
+                    
+                    if (result.success) {
+                        applyTheme(theme);
+                        showToast('Appearance saved! ✅', 'success');
+                    }
+                });
+
+                document.getElementById('downloadDataBtn').addEventListener('click', function() {
+                    showToast('Data export feature coming soon 📥', 'info');
+                });
+
+                document.getElementById('deleteAccountBtn').addEventListener('click', function() {
+                    const modal = document.getElementById('deleteAccountModal');
+                    modal.classList.add('active');
+                });
+
+                document.getElementById('deleteModalClose').addEventListener('click', function() {
+                    const modal = document.getElementById('deleteAccountModal');
+                    modal.classList.remove('active');
+                    document.getElementById('deletePassword').value = '';
+                });
+
+                document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+                    const modal = document.getElementById('deleteAccountModal');
+                    modal.classList.remove('active');
+                    document.getElementById('deletePassword').value = '';
+                });
+
+                document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                    const password = document.getElementById('deletePassword').value;
+
+                    if (!password) {
+                        showToast('Please enter your password', 'error');
+                        return;
+                    }
+
+                    if (confirm('Are you ABSOLUTELY sure? This action cannot be undone!')) {
+                        const result = deleteAccount(user.id, password);
+                        
+                        if (result.success) {
+                            document.getElementById('deleteAccountModal').classList.remove('active');
+                            showToast('Account deleted. See you soon! 👋', 'info');
+                        }
+                    }
+                });
+
+                document.getElementById('deleteAccountModal').addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                        document.getElementById('deletePassword').value = '';
+                    }
+                });
+            }
+
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            function applyTheme(theme) {
+                const html = document.documentElement;
+                
+                if (theme === 'dark') {
+                    html.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('happyGroceries_theme', 'dark');
+                } else if (theme === 'light') {
+                    html.removeAttribute('data-theme');
+                    localStorage.setItem('happyGroceries_theme', 'light');
+                } else {
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        html.setAttribute('data-theme', 'dark');
+                    } else {
+                        html.removeAttribute('data-theme');
+                    }
+                    localStorage.removeItem('happyGroceries_theme');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
